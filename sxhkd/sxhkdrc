@@ -1,18 +1,104 @@
 #
-# wm independent hotkeys
+# variables (sxhkd has no real variables, so these are just for reference —
+# edit the commands below directly if you change terminal/menu/filemanager)
+#
+# terminal    : ghostty
+# filemanager : yazi
+# menu        : rofi -font "Monaspace Argon Medium 12" -show-icons
+
+#
+# apps / launchers
 #
 
-# terminal emulator
+# terminal
+super + t
+	ghostty -e zsh
+
+# floating terminal
 super + Return
-	ghostty
+	ghostty --class=ghostty.floating -e zsh
 
-# program launcher
-super + @space
-	dmenu_run
+# lock screen
+super + l
+	betterlockscreen -l
 
-# make sxhkd reload its configuration files:
+# lock then suspend
+super + alt + mod5 + s
+	betterlockscreen -l & systemctl suspend
+
+# close / kill focused window
+super + q
+	bspc node -c
+super + shift + q
+	bspc node -k
+
+# power menu (swap for whatever menu you use, e.g. rofi power-menu)
+# super + m
+# 	ghostty -e sh -c "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || systemctl poweroff"
+
+# poweroff / reboot
+super + alt + mod5 + p
+	ghostty -e poweroff
+super + alt + mod5 + r
+	ghostty -e reboot
+
+# file manager
+super + e
+	yazi
+
+# toggle floating
+super + v
+	bspc node -t ~floating
+
+# app launcher
+super + d
+	rofi -font "Monaspace Argon Medium 12" -show-icons -show drun
+super + r
+	rofi -font "Monaspace Argon Medium 12" -show-icons -show run
+
+# fullscreen
+super + f
+	bspc node -t ~fullscreen
+
+# yazi in a shell wrapper
+super + y
+	ghostty -e zsh -ic "y; zsh"
+
+# calculator
+super + c
+	gnome-calculator
+
+# wifi tui
+super + i
+	ghostty --class=ghostty.impala -e impala
+
+# bluetooth tui
+super + b
+	ghostty --class=ghostty.bluetui -e bluetui
+
+# audio mixer tui
+super + w
+	ghostty --class=ghostty.wiremix -e wiremix
+
+# package manager gui
+super + g
+	ghostty -e gpk pacmanager
+
+# api client
+super + a
+	ghostty -e zsh -c "ATAC_KEY_BINDINGS=~/.config/atac/vim_key_bindings.oml atac"
+
+# systemctl tui
+super + ctrl + s
+	ghostty -e zsh -c "sudo --background='' systemctltui"
+
+# reload sxhkd
 super + Escape
 	pkill -USR1 -x sxhkd
+
+# re-detect / reapply monitor layout (run after plugging/unplugging the external display)
+super + shift + m
+	~/.config/bspwm/monitors.sh
 
 #
 # bspwm hotkeys
@@ -22,20 +108,16 @@ super + Escape
 super + alt + {q,r}
 	bspc {quit,wm -r}
 
-# close and kill
-super + {_,shift + }w
-	bspc node -{c,k}
-
-# alternate between the tiled and monocle layout
-super + m
+# alternate between tiled and monocle layout
+super + n
 	bspc desktop -l next
 
 # send the newest marked node to the newest preselected node
-super + y
+super + shift + y
 	bspc node newest.marked.local -n newest.!automatic.local
 
 # swap the current node and the biggest window
-super + g
+super + shift + g
 	bspc node -s biggest.window
 
 #
@@ -43,8 +125,8 @@ super + g
 #
 
 # set the window state
-super + {t,shift + t,s,f}
-	bspc node -t {tiled,pseudo_tiled,floating,fullscreen}
+super + {_,shift + }f
+	bspc node -t {~fullscreen,pseudo_tiled}
 
 # set the node flags
 super + ctrl + {m,x,y,z}
@@ -54,27 +136,35 @@ super + ctrl + {m,x,y,z}
 # focus/swap
 #
 
-# focus the node in the given direction
+# focus with arrow keys
+super + {Left,Down,Up,Right}
+	bspc node -f {west,south,north,east}
+
+# focus/swap with vim keys
 super + {_,shift + }{h,j,k,l}
 	bspc node -{f,s} {west,south,north,east}
+
+# cycle focus like alt+tab
+super + Tab
+	bspc node -f next.local
 
 # focus the node for the given path jump
 super + {p,b,comma,period}
 	bspc node -f @{parent,brother,first,second}
 
-# focus the next/previous window in the current desktop
+# focus next/prev window on current desktop
 super + {_,shift + }c
 	bspc node -f {next,prev}.local.!hidden.window
 
-# focus the next/previous desktop in the current monitor
+# focus next/prev desktop on current monitor
 super + bracket{left,right}
 	bspc desktop -f {prev,next}.local
 
-# focus the last node/desktop
-super + {grave,Tab}
-	bspc {node,desktop} -f last
+# focus last node/desktop
+super + grave
+	bspc node -f last
 
-# focus the older or newer node in the focus history
+# focus older/newer node in focus history
 super + {o,i}
 	bspc wm -h off; \
 	bspc node {older,newer} -f; \
@@ -84,23 +174,44 @@ super + {o,i}
 super + {_,shift + }{1-9,0}
 	bspc {desktop -f,node -d} '^{1-9,10}'
 
+# optional: 11-20 range (requires the extra desktops uncommented in bspwmrc)
+# super + alt + {_,shift + }{1-9,0}
+# 	bspc {desktop -f,node -d} '^{11-19,20}'
+
+# send focused desktop to prev/next monitor
+# (replaces the Hyprland CTRL+h/j/k/l binds — those all targeted
+#  special:magic in the source file, which looked like a copy/paste slip)
+super + ctrl + {h,l}
+	bspc desktop -m {prev,next}.local
+
+#
+# scratchpad ("special:magic" equivalent)
+#
+
+super + s
+	bspc desktop -f scratch --follow
+super + shift + s
+	bspc node -d scratch
+
+# scroll through desktops with super + wheel
+super + button4
+	bspc desktop -f prev.local
+super + button5
+	bspc desktop -f next.local
+
 #
 # preselect
 #
 
-# preselect the direction
 super + ctrl + {h,j,k,l}
 	bspc node -p {west,south,north,east}
 
-# preselect the ratio
 super + ctrl + {1-9}
 	bspc node -o 0.{1-9}
 
-# cancel the preselection for the focused node
 super + ctrl + space
 	bspc node -p cancel
 
-# cancel the preselection for the focused desktop
 super + ctrl + shift + space
 	bspc query -N -d | xargs -I id -n 1 bspc node id -p cancel
 
@@ -108,14 +219,52 @@ super + ctrl + shift + space
 # move/resize
 #
 
-# expand a window by moving one of its side outward
+# expand a window by moving one of its sides outward
 super + alt + {h,j,k,l}
 	bspc node -z {left -20 0,bottom 0 20,top 0 -20,right 20 0}
 
-# contract a window by moving one of its side inward
+# contract a window by moving one of its sides inward
 super + alt + shift + {h,j,k,l}
 	bspc node -z {right -20 0,top 0 20,bottom 0 -20,left 20 0}
 
-# move a floating window
-super + {Left,Down,Up,Right}
-	bspc node -v {-20 0,0 20,0 -20,20 0}
+# move/resize with the mouse is configured in bspwmrc via
+# bspc config pointer_modifier / pointer_action1 / pointer_action2
+
+#
+# multimedia / hardware keys
+#
+
+XF86AudioRaiseVolume
+	wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+
+XF86AudioLowerVolume
+	wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+XF86AudioMute
+	wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+XF86AudioMicMute
+	wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+XF86MonBrightnessUp
+	brightnessctl -e4 -n2 set 5%+
+XF86MonBrightnessDown
+	brightnessctl -e4 -n2 set 5%-
+
+XF86AudioNext
+	playerctl next
+XF86AudioPause
+	playerctl play-pause
+XF86AudioPlay
+	playerctl play-pause
+XF86AudioPrev
+	playerctl previous
+
+#
+# screenshots (maim/slop/xclip — X11 equivalents of grim/slurp/wl-copy)
+#
+
+Print
+	maim -s | tee ~/Pictures/screenshots/Screenshot-$(date +%F_%T).png | xclip -selection clipboard -t image/png && dunstify "Screenshot of the region taken" -t 1000
+
+shift + Print
+	maim | tee ~/Pictures/screenshots/Screenshot-$(date +%F_%T).png | xclip -selection clipboard -t image/png && dunstify "Screenshot of the whole screen taken" -t 1000
+
+XF86Launch1
+	obs --startrecording

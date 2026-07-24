@@ -1,0 +1,9 @@
+# /etc/default/keyboard
+# Install with: sudo cp etc-default-keyboard /etc/default/keyboard && sudo dpkg-reconfigure keyboard-configuration
+
+XKBMODEL="thinkpad60"
+XKBLAYOUT="br"
+XKBVARIANT="abnt2"
+XKBOPTIONS=""
+
+BACKSPACE="guess"
