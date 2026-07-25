@@ -32,15 +32,11 @@ super + q
 super + shift + q
 	bspc node -k
 
-# power menu (swap for whatever menu you use, e.g. rofi power-menu)
-# super + m
-# 	ghostty -e sh -c "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || systemctl poweroff"
-
 # poweroff / reboot
 super + alt + mod5 + p
-	ghostty -e poweroff
+	[ "$(printf 'Yes\nNo' | rofi -dmenu -p 'Poweroff?')" = "Yes" ] && systemctl poweroff
 super + alt + mod5 + r
-	ghostty -e reboot
+	[ "$(printf 'Yes\nNo' | rofi -dmenu -p 'Reboot?')" = "Yes" ] && systemctl reboot
 
 # file manager
 super + e
@@ -56,10 +52,6 @@ super + d
 super + r
 	rofi -font "Monaspace Argon Medium 12" -show-icons -show run
 
-# fullscreen
-super + f
-	bspc node -t ~fullscreen
-
 # yazi in a shell wrapper
 super + y
 	ghostty -e zsh -ic "y; zsh"
@@ -69,27 +61,27 @@ super + c
 	gnome-calculator
 
 # wifi tui
-super + i
+super + alt+ i
 	ghostty --class=ghostty.impala -e impala
 
 # bluetooth tui
-super + b
-	ghostty --class=ghostty.bluetui -e bluetui
+super + alt + b
+	ghostty --class=ghostty.bluetui -e $HOME/.cargo/bin/bluetui
 
 # audio mixer tui
-super + w
-	ghostty --class=ghostty.wiremix -e wiremix
+super + alt + w
+	ghostty --class=ghostty.wiremix -e $HOME/.cargo/bin/wiremix
 
 # package manager gui
-super + g
+super + alt + g
 	ghostty -e gpk pacmanager
 
 # api client
-super + a
+super + alt + a
 	ghostty -e zsh -c "ATAC_KEY_BINDINGS=~/.config/atac/vim_key_bindings.oml atac"
 
 # systemctl tui
-super + ctrl + s
+super + alt + s
 	ghostty -e zsh -c "sudo --background='' systemctltui"
 
 # reload sxhkd
@@ -98,7 +90,7 @@ super + Escape
 
 # re-detect / reapply monitor layout (run after plugging/unplugging the external display)
 super + shift + m
-	~/.config/bspwm/monitors.sh
+  ~/.config/Xorg/scripts/monitors.sh
 
 #
 # bspwm hotkeys
@@ -126,7 +118,7 @@ super + shift + g
 
 # set the window state
 super + {_,shift + }f
-	bspc node -t {~fullscreen,pseudo_tiled}
+	bspc node -t {~fullscreen,~pseudo_tiled}
 
 # set the node flags
 super + ctrl + {m,x,y,z}
@@ -152,10 +144,6 @@ super + Tab
 super + {p,b,comma,period}
 	bspc node -f @{parent,brother,first,second}
 
-# focus next/prev window on current desktop
-super + {_,shift + }c
-	bspc node -f {next,prev}.local.!hidden.window
-
 # focus next/prev desktop on current monitor
 super + bracket{left,right}
 	bspc desktop -f {prev,next}.local
@@ -170,13 +158,19 @@ super + {o,i}
 	bspc node {older,newer} -f; \
 	bspc wm -h on
 
-# focus or send to the given desktop
-super + {_,shift + }{1-9,0}
-	bspc {desktop -f,node -d} '^{1-9,10}'
+# focus the given desktop
+super + {1-9,0}
+	bspc desktop -f '^{1-9,10}'
+
+# send focused node to the given desktop and follow it there (as in Hyprland)
+super + shift + {1-9,0}
+	bspc node -d '^{1-9,10}' --follow
 
 # optional: 11-20 range (requires the extra desktops uncommented in bspwmrc)
-# super + alt + {_,shift + }{1-9,0}
-# 	bspc {desktop -f,node -d} '^{11-19,20}'
+# super + alt + {1-9,0}
+# 	bspc desktop -f '^{11-19,20}'
+# super + alt + shift + {1-9,0}
+# 	bspc node -d '^{11-19,20}' --follow
 
 # send focused desktop to prev/next monitor
 # (replaces the Hyprland CTRL+h/j/k/l binds — those all targeted
@@ -195,9 +189,9 @@ super + shift + s
 
 # scroll through desktops with super + wheel
 super + button4
-	bspc desktop -f prev.local
+	bspc desktop -f prev.local.occupied
 super + button5
-	bspc desktop -f next.local
+	bspc desktop -f next.local.occupied
 
 #
 # preselect
@@ -235,17 +229,22 @@ super + alt + shift + {h,j,k,l}
 #
 
 XF86AudioRaiseVolume
-	wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+
+	wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+; dunstify -r 91192 -u low "Volume" "$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{printf "%.0f%%", $2*100}')"
 XF86AudioLowerVolume
-	wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-
+	wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-; dunstify -r 91192 -u low "Volume" "$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{printf "%.0f%%", $2*100}')"
 XF86AudioMute
-	wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle
+	wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; dunstify -r 91192 -u low "Volume" "$(wpctl get-volume @DEFAULT_AUDIO_SINK@ | grep -q MUTED && echo muted || echo unmuted)"
 XF86AudioMicMute
-	wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle
+	wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; dunstify -r 91193 -u low "Microphone" "$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED && echo muted || echo unmuted)"
 XF86MonBrightnessUp
-	brightnessctl -e4 -n2 set 5%+
+	brightnessctl -e4 -n2 set 5%+ >/dev/null; dunstify -r 91194 -u low "Brightness" "$(brightnessctl -m | cut -d, -f4)"
 XF86MonBrightnessDown
-	brightnessctl -e4 -n2 set 5%-
+	brightnessctl -e4 -n2 set 5%- >/dev/null; dunstify -r 91194 -u low "Brightness" "$(brightnessctl -m | cut -d, -f4)"
+
+# keyboard backlight (no dedicated hardware key on this ThinkPad -- cycles
+# through tpacpi::kbd_backlight's levels on plain F7)
+F7
+	max=$(brightnessctl -d 'tpacpi::kbd_backlight' m); cur=$(brightnessctl -d 'tpacpi::kbd_backlight' g); next=$(( (cur + 1) % (max + 1) )); brightnessctl -d 'tpacpi::kbd_backlight' set "$next" >/dev/null; dunstify -r 91195 -u low "Keyboard backlight" "$next / $max"
 
 XF86AudioNext
 	playerctl next

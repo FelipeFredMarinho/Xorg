@@ -1,0 +1,10 @@
+# libinput-gestures expects this at ~/.config/libinput-gestures.conf as a
+# flat file, unlike the per-app directories elsewhere in this repo, so
+# symlink the file itself, not this directory:
+#   ln -s ~/.config/Xorg/libinput-gestures/config ~/.config/libinput-gestures.conf
+#
+# 3-finger swipe switches bspwm desktops, matching super+bracketleft/right
+# in sxhkdrc.
+
+gesture swipe left 3 bspc desktop -f next.local.occupied
+gesture swipe right 3 bspc desktop -f prev.local.occupied

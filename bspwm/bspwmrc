@@ -4,13 +4,40 @@
 setxkbmap -model thinkpad60 -layout br -variant abnt2 -option ""
 
 # --- monitors: laptop panel + optional ultrawide external ---
-~/.config/bspwm/monitors.sh &
+~/.config/Xorg/scripts/monitors.sh &
+
+# --- input tuning (cursor theme, tap-to-click, pointer speed) ---
+~/.config/Xorg/scripts/input-setup.sh
 
 # --- autostart ---
+# guard against duplicates piling up across `bspc wm -r` restarts
+pkill -x sxhkd
+pkill -x picom
 sxhkd &
 picom &
-dunst &
+# dunst is systemd/D-Bus-activated on this machine (org.freedesktop.Notifications
+# -> dunst.service), not started here -- config still applies from
+# ~/.config/dunst/dunstrc regardless of how it's launched. Symlink dunst/
+# into ~/.config, then `systemctl --user restart dunst.service` after
+# editing dunstrc.
 feh --bg-fill /usr/share/backgrounds/Rainbow_lightbulb_by_Daniel_Micallef.png
+
+# status bar (config: ~/.config/polybar/config.ini — symlink polybar/ into
+# ~/.config like bspwm/ and sxhkd/ already are)
+pkill -x polybar
+polybar mainbar &
+
+# airplane-mode notification (the key itself is handled by firmware, see script)
+~/.config/Xorg/scripts/rfkill-notify.sh &
+
+# 3-finger swipe to switch desktops (config: ~/.config/libinput-gestures.conf —
+# symlink libinput-gestures/config from this repo to that exact file, it's
+# flat, not a directory like the others). Run directly rather than through
+# `libinput-gestures-setup start`: that wrapper only knows how to launch
+# itself via a KDE/GNOME/i3-style desktop launcher, none of which apply to
+# bspwm, so it silently no-ops here regardless of whether it's installed.
+pkill -f libinput-gestures
+command -v libinput-gestures >/dev/null 2>&1 && libinput-gestures &
 
 # lock after 5 minutes of inactivity, then blank the display shortly after
 xautolock -time 5 -locker "betterlockscreen -l" -detectsleep &
@@ -33,8 +60,9 @@ bspc rule -a ghostty.wiremix state=floating center=true
 bspc rule -a Gnome-calculator state=floating center=true
 
 # --- bspwm config ---
-bspc config border_width         2
-bspc config window_gap           8
+bspc config border_width         0
+bspc config top_padding          24
+bspc config window_gap           4
 bspc config split_ratio          0.52
 bspc config borderless_monocle   true
 bspc config gapless_monocle      true
