@@ -1,10 +1,18 @@
-#! /bin/sh
+#!/usr/bin/env sh
 
 # --- keyboard: Brazilian ABNT2, ThinkPad/Lenovo model, no extra options ---
 setxkbmap -model thinkpad60 -layout br -variant abnt2 -option ""
 
-# --- monitors: laptop panel + optional ultrawide external ---
-~/.config/Xorg/scripts/monitors.sh &
+# --- dark mode (GTK3/GTK4/libadwaita apps, matching Ubuntu's look) ---
+# needs gtk-3.0/, gtk-4.0/, and rofi/ symlinked into ~/.config like the others
+export GTK_THEME=Adwaita:dark
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null
+
+# --- monitors: laptop panel + optional ultrawide external, plus the
+# matching bspwm desktop split and polybar instance count -- all three are
+# handled together by monitors.sh so they can't drift out of sync. Run
+# synchronously (no &) so desktops/polybar exist before the config below.
+~/.config/Xorg/scripts/monitors.sh
 
 # --- input tuning (cursor theme, tap-to-click, pointer speed) ---
 ~/.config/Xorg/scripts/input-setup.sh
@@ -22,13 +30,14 @@ picom &
 # editing dunstrc.
 feh --bg-fill /usr/share/backgrounds/Rainbow_lightbulb_by_Daniel_Micallef.png
 
-# status bar (config: ~/.config/polybar/config.ini — symlink polybar/ into
-# ~/.config like bspwm/ and sxhkd/ already are)
-pkill -x polybar
-polybar mainbar &
-
 # airplane-mode notification (the key itself is handled by firmware, see script)
+pkill -f rfkill-notify.sh
 ~/.config/Xorg/scripts/rfkill-notify.sh &
+
+# re-applies monitors.sh automatically on hotplug, instead of only reacting
+# to the manual super+shift+m hotkey
+pkill -f monitor-watch.sh
+~/.config/Xorg/scripts/monitor-watch.sh &
 
 # 3-finger swipe to switch desktops (config: ~/.config/libinput-gestures.conf —
 # symlink libinput-gestures/config from this repo to that exact file, it's
@@ -44,13 +53,6 @@ xautolock -time 5 -locker "betterlockscreen -l" -detectsleep &
 xset s off -dpms
 xset dpms 300 0 0     # screen off 5 min after the lock (adjust to taste)
 
-# --- monitor / desktop setup ---
-bspc monitor -d 1 2 3 4 5 6 7 8 9 10
-# uncomment if you also want the "alt + 1-0" 11-20 range from the Hyprland config:
-# bspc monitor -d 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-
-# scratchpad desktop used by super+s / super+shift+s in sxhkdrc
-bspc monitor -a scratch
 
 # --- window rules ---
 bspc rule -a ghostty.floating state=floating center=true
@@ -68,7 +70,12 @@ bspc config borderless_monocle   true
 bspc config gapless_monocle      true
 bspc config focus_follows_pointer true
 
-# mouse move/resize (replaces Hyprland's mouse:272 / mouse:273 drag binds)
+# super + left-drag: move, super + middle/right-drag: resize
 bspc config pointer_modifier super
 bspc config pointer_action1 move
 bspc config pointer_action2 resize_corner
+bspc config pointer_action3 resize_corner
+
+bspc config remove_disabled_monitors true
+bspc config remove_unplugged_monitors true
+bspc config merge_overlapping_monitors true
