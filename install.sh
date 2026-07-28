@@ -37,13 +37,22 @@ sudo usermod -aG video,input "$(whoami)"
 
 cat <<'EOF'
 
-==> Not packaged in apt/pacman/brew - install these manually:
+==> Not packaged in apt/pacman/brew - install these manually.
+    Clone these somewhere OTHER than this repo (e.g. ~/build/) -- cloning
+    into ~/.config/Xorg pollutes `git status` here with unrelated source trees:
 
   betterlockscreen  (lock screen; used by super+l, the suspend bind, and
                      xautolock's locker in bspwmrc - lock/suspend won't
                      work correctly until this is installed)
+                     Needs i3lock-color first (plain i3lock from apt/pacman
+                     is NOT enough -- betterlockscreen requires the -color
+                     fork specifically). Neither of these use a Makefile --
+                     use their own installer scripts, not `make install`:
+    git clone https://github.com/Raymo111/i3lock-color.git
+    cd i3lock-color && ./install-i3lock-color.sh
     git clone https://github.com/pavanjadhaw/betterlockscreen.git
-    cd betterlockscreen && sudo make install
+    cd betterlockscreen && sudo ./install.sh system
+    betterlockscreen -u /path/to/your/wallpaper   # pre-caches the lock image, do this once
 
   bluetui           (bluetooth TUI; super+b)
     cargo install bluetui
