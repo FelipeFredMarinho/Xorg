@@ -8,6 +8,11 @@ setxkbmap -model thinkpad60 -layout br -variant abnt2 -option ""
 export GTK_THEME=Adwaita:dark
 gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null
 
+# polybar's colors.ini reads ${xrdb:colorN} -- must run before monitors.sh
+# launches polybar. GDM's bspwm session doesn't go through /etc/X11/xinit's
+# usual xrdb-merge step, so it's done here instead.
+xrdb -merge ~/.config/Xorg/Xresources
+
 # --- monitors: laptop panel + optional ultrawide external, plus the
 # matching bspwm desktop split and polybar instance count -- all three are
 # handled together by monitors.sh so they can't drift out of sync. Run
@@ -62,9 +67,9 @@ bspc rule -a ghostty.wiremix state=floating center=true
 bspc rule -a Gnome-calculator state=floating center=true
 
 # --- bspwm config ---
-bspc config border_width         0
-bspc config top_padding          24
-bspc config window_gap           4
+bspc config border_width         1
+bspc config top_padding          0
+bspc config window_gap           2
 bspc config split_ratio          0.52
 bspc config borderless_monocle   true
 bspc config gapless_monocle      true
