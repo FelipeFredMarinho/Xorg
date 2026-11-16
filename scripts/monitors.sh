@@ -24,8 +24,8 @@ if xrandr --query | grep -q "^${EXTERNAL} connected"; then
 		--output "$LAPTOP"   --primary --mode 1920x1200 --rate 60 --pos 0x0 \
 		--output "$EXTERNAL" --mode 2560x1080 --rate 75 --left-of "$LAPTOP"
 
-	bspc monitor "$EXTERNAL" -d 1 2 3 4 5
-	bspc monitor "$LAPTOP" -d 6 7 8 9 10
+	bspc monitor "$EXTERNAL" -d 1 2 3 4 5 6 11 12 13
+	bspc monitor "$LAPTOP" -d 7 8 9 10 14 15
 
 	killall -q polybar
 	MONITOR="$LAPTOP" polybar mainbar &
@@ -35,7 +35,7 @@ else
 	xrandr --output "$LAPTOP" --primary --mode 1920x1200 --rate 60 \
 		--output "$EXTERNAL" --off
 
-	bspc monitor "$LAPTOP" -d 1 2 3 4 5 6 7 8 9 10
+	bspc monitor "$LAPTOP" -d 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
 
 	killall -q polybar
 	MONITOR="$LAPTOP" polybar mainbar &

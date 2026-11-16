@@ -27,7 +27,7 @@ xrdb -merge ~/.config/Xorg/Xresources
 pkill -x sxhkd
 pkill -x picom
 sxhkd &
-picom &
+picom --config ~/.config/Xorg/picom/picom.conf &
 # dunst is systemd/D-Bus-activated on this machine (org.freedesktop.Notifications
 # -> dunst.service), not started here -- config still applies from
 # ~/.config/dunst/dunstrc regardless of how it's launched. Symlink dunst/
@@ -54,17 +54,19 @@ pkill -f libinput-gestures
 command -v libinput-gestures >/dev/null 2>&1 && libinput-gestures &
 
 # lock after 5 minutes of inactivity, then blank the display shortly after
-xautolock -time 5 -locker "betterlockscreen -l" -detectsleep &
+xautolock -time 5 -locker "$HOME/.config/Xorg/scripts/lock.sh" -detectsleep &
 xset s off -dpms
 xset dpms 300 0 0     # screen off 5 min after the lock (adjust to taste)
 
 
 # --- window rules ---
-bspc rule -a ghostty.floating state=floating center=true
-bspc rule -a ghostty.impala  state=floating center=true
-bspc rule -a ghostty.bluetui state=floating center=true
-bspc rule -a ghostty.wiremix state=floating center=true
-bspc rule -a Gnome-calculator state=floating center=true
+bspc rule -a ghostty.floating state=floating center=true rectangle=1200x800+200+200
+bspc rule -a ghostty.impala  state=floating center=true rectangle=1200x800+200+200
+bspc rule -a ghostty.bluetui state=floating center=true rectangle=1200x800+200+200
+bspc rule -a ghostty.wiremix state=floating center=true rectangle=1200x800+200+200
+bspc rule -a ghostty.yazi state=floating center=true rectangle=1200x800+200+200
+bspc rule -a lazydocker.floating state=floating center=true rectangle=1500x800+200+200
+bspc rule -a Gnome-calculator state=floating center=true rectangle=1200x800+200+200
 
 # --- bspwm config ---
 bspc config border_width         1
